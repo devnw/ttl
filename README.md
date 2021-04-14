@@ -1,6 +1,6 @@
 # TTL Cache Implementation for Go
 
-[![CI](https://github.com/devnw/ttl/workflows/CI/badge.svg)](https://github.com/devnw/ttl/actions)
+[![Build & Test Action Status](https://github.com/devnw/ttl/actions/workflows/build.yml/badge.svg)](https://github.com/devnw/ttl/actions)
 [![Go Report Card](https://goreportcard.com/badge/devnw.com/ttl)](https://goreportcard.com/report/devnw.com/ttl)
 [![codecov](https://codecov.io/gh/devnw/ttl/branch/main/graph/badge.svg)](https://codecov.io/gh/devnw/ttl)
 [![Go Reference](https://pkg.go.dev/badge/devnw.com/ttl.svg)](https://pkg.go.dev/devnw.com/ttl)
