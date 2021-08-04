@@ -105,16 +105,32 @@ func (c *cache) set(
 				}
 
 				value = v
+
+				resetTimer(t, timeout)
 			case outgoing <- value:
-				// Extend timer here
-				if !t.Stop() {
-					<-t.C
+				// Only extend the timer on read
+				// if it is configured to do so
+				if !extend {
+					continue
 				}
-				t.Reset(timeout)
+
+				resetTimer(t, timeout)
 			}
 		}
 
 	}(key, value, outgoing, incoming, timeout, extend)
 
 	return out
+}
+
+// resetTimer resets the timer instance using the
+// duration passed in. This uses the recommended
+// set of calls from the go doc for `time.Timer.Reset`
+// to ensure the the `C` channel is drained and doesn't
+// immediately read on reset
+func resetTimer(t *time.Timer, d time.Duration) {
+	if !t.Stop() {
+		<-t.C
+	}
+	t.Reset(d)
 }
