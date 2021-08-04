@@ -13,10 +13,11 @@ type rw struct {
 }
 
 type cache struct {
-	ctx        context.Context
-	defaultTTL time.Duration
-	values     map[interface{}]rw
-	valuesMu   sync.RWMutex
+	ctx      context.Context
+	timeout  time.Duration
+	extend   bool
+	values   map[interface{}]*rw
+	valuesMu sync.RWMutex
 }
 
 // Delete removes the values associated with the
@@ -67,4 +68,53 @@ func (c *cache) Set(key, value interface{}) {
 
 func (c *cache) SetTTL(key, value interface{}, timeout time.Duration) {
 
+}
+
+func (c *cache) set(
+	ctx context.Context,
+	key, value interface{},
+	timeout time.Duration,
+	extend bool,
+) *rw {
+	outgoing := make(chan interface{})
+	incoming := make(chan interface{})
+	out := &rw{
+		read:  outgoing,
+		write: incoming,
+	}
+
+	go func(
+		key, value interface{},
+		outgoing chan<- interface{},
+		incoming <-chan interface{},
+		timeout time.Duration,
+		extend bool,
+	) {
+		defer c.Delete(key) // Cleanup the map entry
+		t := time.NewTimer(timeout)
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-t.C:
+				return
+			case v, ok := <-incoming:
+				if !ok {
+					continue
+				}
+
+				value = v
+			case outgoing <- value:
+				// Extend timer here
+				if !t.Stop() {
+					<-t.C
+				}
+				t.Reset(timeout)
+			}
+		}
+
+	}(key, value, outgoing, incoming, timeout, extend)
+
+	return out
 }
