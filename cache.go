@@ -54,104 +54,6 @@ func (c *cache) cleanup() {
 	c.values = nil
 }
 
-// Delete removes the values associated with the
-// passed key from the cache
-func (c *cache) Delete(
-	ctx context.Context,
-	key interface{},
-) {
-	c.valuesMu.Lock()
-	defer c.valuesMu.Unlock()
-
-	rw, ok := c.values[key]
-	if !ok {
-		return
-	}
-
-	// Cancel the context and delete the map entry
-	// for this key
-	rw.cancel()
-	delete(c.values, key)
-}
-
-func (c *cache) Get(
-	ctx context.Context,
-	key interface{},
-) (interface{}, bool) {
-	if c.values == nil {
-		return nil, false
-	}
-
-	c.valuesMu.RLock()
-	rw, ok := c.values[key]
-	c.valuesMu.RUnlock()
-
-	// No stored value for this key
-	if !ok {
-		return nil, ok
-	}
-
-	// TODO: This should have a timeout to ensure that
-	// if there is a block on the read that the cache doesn't
-	// create a deadlock
-	select {
-	case <-c.ctx.Done():
-		return nil, false
-	case v, ok := <-rw.read:
-		if !ok {
-			return nil, ok
-		}
-
-		return v, ok
-	}
-}
-
-func (c *cache) Set(
-	ctx context.Context,
-	key, value interface{},
-) error {
-	return c.SetTTL(ctx, key, value, &c.timeout)
-}
-
-// SetTTL allows for direct control over the TTL of a specific
-// Key in the cache which is passed as timeout in parameter three.
-// This timeout can be `nil` which will keep the value permanently
-// in the cache without expiration until it's deleted
-func (c *cache) SetTTL(
-	ctx context.Context,
-	key, value interface{},
-	timeout *time.Duration,
-) error {
-	if c.values == nil {
-		return fmt.Errorf("canceled cache instance")
-	}
-
-	// Pull the parent context if the passed context is nil
-	if ctx == nil {
-		ctx = c.ctx
-	}
-
-	c.valuesMu.RLock()
-	rw, ok := c.values[key]
-	c.valuesMu.RUnlock()
-
-	// No stored value for this key
-	if !ok {
-		return c.write(key, c.set(key, value, timeout, c.extend))
-	}
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case rw.write <- newvalue{
-		v:       value,
-		timeout: timeout,
-	}:
-	}
-
-	return nil
-}
-
 func (c *cache) set(
 	key, value interface{},
 	timeout *time.Duration,
@@ -195,18 +97,11 @@ func (c *cache) rwloop(
 		// defer removes this key from the cache
 		_ = recover()
 
-		if timeout != nil {
-			c.Delete(ctx, key) // Cleanup the map entry
-			return
-		}
-
 		select {
 		case <-ctx.Done():
 			return
 		default:
-			// Re-initialize this map entry since this key/value is expected
-			// to persist in the cache
-			_ = c.write(key, c.set(key, value, timeout, extend))
+			c.Delete(ctx, key) // Cleanup the map entry
 		}
 	}()
 
@@ -233,9 +128,9 @@ func (c *cache) rwloop(
 				continue
 			}
 
-			value = v
+			value = v.v
 
-			resetTimer(t, timeout)
+			resetTimer(t, v.timeout)
 		case outgoing <- value:
 			// Only extend the timer on read
 			// if it is configured to do so
