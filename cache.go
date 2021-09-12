@@ -27,20 +27,20 @@ type cache struct {
 	valuesMu sync.RWMutex
 }
 
-func (c *cache) write(key interface{}, value *rw) {
+func (c *cache) write(key interface{}, value *rw) error {
 	if c.values == nil || value == nil {
-		return
+		return fmt.Errorf("invalid cache instance")
 	}
 
 	c.valuesMu.Lock()
 	defer c.valuesMu.Unlock()
 
 	c.values[key] = value
+
+	return nil
 }
 
 func (c *cache) cleanup() {
-	<-c.ctx.Done()
-
 	c.valuesMu.Lock()
 	defer c.valuesMu.Unlock()
 
@@ -137,8 +137,7 @@ func (c *cache) SetTTL(
 
 	// No stored value for this key
 	if !ok {
-		c.write(key, c.set(key, value, timeout, c.extend))
-		return nil
+		return c.write(key, c.set(key, value, timeout, c.extend))
 	}
 
 	select {
@@ -207,7 +206,7 @@ func (c *cache) rwloop(
 		default:
 			// Re-initialize this map entry since this key/value is expected
 			// to persist in the cache
-			c.write(key, c.set(key, value, timeout, extend))
+			_ = c.write(key, c.set(key, value, timeout, extend))
 		}
 	}()
 

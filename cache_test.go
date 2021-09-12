@@ -112,7 +112,10 @@ func Test_cache_write(t *testing.T) {
 				t.Fatal("Expected valid struct, got NIL")
 			}
 
-			che.write(test.key, test.value)
+			err := che.write(test.key, test.value)
+			if err != nil {
+				t.Fatalf("expected success | %s", err.Error())
+			}
 
 			v, ok := che.values[test.key]
 			if !ok {
@@ -126,12 +129,13 @@ func Test_cache_write(t *testing.T) {
 	}
 }
 
-func Test_cache_cleanup(t *testing.T) {
+func Test_cache_write_cleaned(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	c := NewCache(ctx, time.Hour, false)
 
-	cancel()
+	rw := cleanrw()
 
 	che, ok := c.(*cache)
 	if !ok {
@@ -140,5 +144,69 @@ func Test_cache_cleanup(t *testing.T) {
 
 	if che == nil {
 		t.Fatal("Expected valid struct, got NIL")
+	}
+
+	che.cleanup()
+
+	err := che.write("test", rw)
+	if err == nil {
+		t.Fatal("expected failure due to nil value map")
+	}
+}
+
+func Test_cache_write_invalid_value(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	c := NewCache(ctx, time.Hour, false)
+
+	che, ok := c.(*cache)
+	if !ok {
+		t.Fatal("Invalid internal cache type")
+	}
+
+	if che == nil {
+		t.Fatal("Expected valid struct, got NIL")
+	}
+
+	err := che.write("test", nil)
+	if err == nil {
+		t.Fatal("expected failure due to nil value")
+	}
+}
+
+func Test_cache_cleanup(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	c := NewCache(ctx, time.Hour, false)
+
+	rw := cleanrw()
+
+	che, ok := c.(*cache)
+	if !ok {
+		t.Fatal("Invalid internal cache type")
+	}
+
+	if che == nil {
+		t.Fatal("Expected valid struct, got NIL")
+	}
+
+	err := che.write("test", rw)
+	if err != nil {
+		t.Fatalf("expected success | %s", err.Error())
+	}
+
+	che.cleanup()
+
+	// Ensure the stored value's context is canceled
+	select {
+	case <-time.Tick(time.Minute):
+		t.Fatal("expected canceled context on value")
+	case <-rw.ctx.Done():
+	}
+
+	if che.values != nil {
+		t.Fatalf("cache not properly cleaned up")
 	}
 }

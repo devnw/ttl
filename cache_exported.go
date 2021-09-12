@@ -33,7 +33,10 @@ func NewCache(ctx context.Context, timeout time.Duration, extend bool) Cache {
 		values:  make(map[interface{}]*rw),
 	}
 
-	go c.cleanup()
+	go func() {
+		<-ctx.Done()
+		c.cleanup()
+	}()
 
 	return c
 }
