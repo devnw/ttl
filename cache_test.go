@@ -81,7 +81,7 @@ func cleanrw() *rw {
 		ctx,
 		cancel,
 		make(<-chan interface{}),
-		make(chan<- interface{}),
+		make(chan<- newvalue),
 	}
 }
 
@@ -123,5 +123,22 @@ func Test_cache_write(t *testing.T) {
 				t.Fatal("Value does not match specified value")
 			}
 		})
+	}
+}
+
+func Test_cache_cleanup(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	c := NewCache(ctx, time.Hour, false)
+
+	cancel()
+
+	che, ok := c.(*cache)
+	if !ok {
+		t.Fatal("Invalid internal cache type")
+	}
+
+	if che == nil {
+		t.Fatal("Expected valid struct, got NIL")
 	}
 }

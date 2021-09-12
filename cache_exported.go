@@ -6,14 +6,15 @@ import (
 )
 
 type Cache interface {
-	Get(key interface{}) (interface{}, bool)
-	Set(key, value interface{})
+	Get(ctx context.Context, key interface{}) (interface{}, bool)
+
+	Set(ctx context.Context, key, value interface{}) error
 
 	// SetTTL allows for overriding the default timeout
 	// for the cache for this value
-	SetTTL(key, value interface{}, timeout *time.Duration)
+	SetTTL(ctx context.Context, key, value interface{}, timeout *time.Duration) error
 
-	Delete(key interface{})
+	Delete(ctx context.Context, key interface{})
 }
 
 // NewCache creates a new TTL Cache using the a timeout
@@ -32,7 +33,7 @@ func NewCache(ctx context.Context, timeout time.Duration, extend bool) Cache {
 		values:  make(map[interface{}]*rw),
 	}
 
-	defer c.cleanup()
+	go c.cleanup()
 
 	return c
 }

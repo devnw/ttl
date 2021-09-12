@@ -2,15 +2,21 @@ package ttl
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 )
+
+type newvalue struct {
+	v       interface{}
+	timeout *time.Duration
+}
 
 type rw struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 	read   <-chan interface{}
-	write  chan<- interface{}
+	write  chan<- newvalue
 }
 
 type cache struct {
@@ -39,15 +45,8 @@ func (c *cache) cleanup() {
 	defer c.valuesMu.Unlock()
 
 	// Cancel contexts
-	keys := []interface{}{}
-	for key, value := range c.values {
+	for _, value := range c.values {
 		value.cancel()
-		keys = append(keys, key)
-	}
-
-	// Delete keys
-	for _, key := range keys {
-		delete(c.values, key)
 	}
 
 	// Nil the map out so nothing can write
@@ -57,7 +56,10 @@ func (c *cache) cleanup() {
 
 // Delete removes the values associated with the
 // passed key from the cache
-func (c *cache) Delete(key interface{}) {
+func (c *cache) Delete(
+	ctx context.Context,
+	key interface{},
+) {
 	c.valuesMu.Lock()
 	defer c.valuesMu.Unlock()
 
@@ -72,7 +74,14 @@ func (c *cache) Delete(key interface{}) {
 	delete(c.values, key)
 }
 
-func (c *cache) Get(key interface{}) (interface{}, bool) {
+func (c *cache) Get(
+	ctx context.Context,
+	key interface{},
+) (interface{}, bool) {
+	if c.values == nil {
+		return nil, false
+	}
+
 	c.valuesMu.RLock()
 	rw, ok := c.values[key]
 	c.valuesMu.RUnlock()
@@ -97,16 +106,51 @@ func (c *cache) Get(key interface{}) (interface{}, bool) {
 	}
 }
 
-func (c *cache) Set(key, value interface{}) {
-	c.set(key, value, &c.timeout, c.extend)
+func (c *cache) Set(
+	ctx context.Context,
+	key, value interface{},
+) error {
+	return c.SetTTL(ctx, key, value, &c.timeout)
 }
 
 // SetTTL allows for direct control over the TTL of a specific
 // Key in the cache which is passed as timeout in parameter three.
 // This timeout can be `nil` which will keep the value permanently
 // in the cache without expiration until it's deleted
-func (c *cache) SetTTL(key, value interface{}, timeout *time.Duration) {
-	c.set(key, value, timeout, c.extend)
+func (c *cache) SetTTL(
+	ctx context.Context,
+	key, value interface{},
+	timeout *time.Duration,
+) error {
+	if c.values == nil {
+		return fmt.Errorf("canceled cache instance")
+	}
+
+	// Pull the parent context if the passed context is nil
+	if ctx == nil {
+		ctx = c.ctx
+	}
+
+	c.valuesMu.RLock()
+	rw, ok := c.values[key]
+	c.valuesMu.RUnlock()
+
+	// No stored value for this key
+	if !ok {
+		c.write(key, c.set(key, value, timeout, c.extend))
+		return nil
+	}
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case rw.write <- newvalue{
+		v:       value,
+		timeout: timeout,
+	}:
+	}
+
+	return nil
 }
 
 func (c *cache) set(
@@ -116,7 +160,7 @@ func (c *cache) set(
 ) *rw {
 	ctx, cancel := context.WithCancel(c.ctx)
 	outgoing := make(chan interface{})
-	incoming := make(chan interface{})
+	incoming := make(chan newvalue)
 
 	out := &rw{
 		ctx:    ctx,
@@ -142,7 +186,7 @@ func (c *cache) rwloop(
 	ctx context.Context,
 	key, value interface{},
 	outgoing chan<- interface{},
-	incoming <-chan interface{},
+	incoming <-chan newvalue,
 	timeout *time.Duration,
 	extend bool,
 ) {
@@ -153,7 +197,7 @@ func (c *cache) rwloop(
 		_ = recover()
 
 		if timeout != nil {
-			c.Delete(key) // Cleanup the map entry
+			c.Delete(ctx, key) // Cleanup the map entry
 			return
 		}
 
