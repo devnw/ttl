@@ -98,7 +98,7 @@ func (c *cache) Get(key interface{}) (interface{}, bool) {
 }
 
 func (c *cache) Set(key, value interface{}) {
-
+	c.set(key, value, &c.timeout, c.extend)
 }
 
 // SetTTL allows for direct control over the TTL of a specific
@@ -106,7 +106,7 @@ func (c *cache) Set(key, value interface{}) {
 // This timeout can be `nil` which will keep the value permanently
 // in the cache without expiration until it's deleted
 func (c *cache) SetTTL(key, value interface{}, timeout *time.Duration) {
-
+	c.set(key, value, timeout, c.extend)
 }
 
 func (c *cache) set(
@@ -165,7 +165,6 @@ func (c *cache) rwloop(
 			// to persist in the cache
 			c.write(key, c.set(key, value, timeout, extend))
 		}
-
 	}()
 
 	// Create the internal timer if the timeout is non-nil
@@ -204,7 +203,6 @@ func (c *cache) rwloop(
 			resetTimer(t, timeout)
 		}
 	}
-
 }
 
 // resetTimer resets the timer instance using the
