@@ -44,8 +44,16 @@ func (c *cache) cleanup() {
 	c.valuesMu.Lock()
 	defer c.valuesMu.Unlock()
 
+	if c.values == nil {
+		return
+	}
+
 	// Cancel contexts
 	for _, value := range c.values {
+		if value == nil || value.cancel == nil {
+			continue
+		}
+
 		value.cancel()
 	}
 
