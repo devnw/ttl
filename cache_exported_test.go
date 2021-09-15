@@ -370,13 +370,69 @@ func Test_SetTTL(t *testing.T) {
 	}
 }
 
+func Test_Set_expiration(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	c := NewCache(ctx, time.Hour, false)
+
+	testdata := map[string]struct {
+		value     string
+		expected  time.Duration
+		tolerance time.Duration
+	}{
+		"integer 1s": {
+			"1",
+			time.Second,
+			time.Second,
+		},
+		"integer 2s": {
+			"2",
+			time.Second * 2,
+			time.Second,
+		},
+		"integer 5s": {
+			"5",
+			time.Second * 5,
+			time.Second,
+		},
+		"integer 10s": {
+			"10",
+			time.Second * 10,
+			time.Second,
+		},
+	}
+
+	for name, test := range testdata {
+		t.Run(name, func(t *testing.T) {
+			c.Set(ctx, key, test.value)
+
+			<-time.Tick(test.expected + test.tolerance)
+
+			_, ok := c.Get(ctx, key)
+			if ok {
+				t.Fatal("expected expiration")
+			}
+
+			// diff := time.Since(tstart)
+			// expPos := test.expected + test.tolerance
+			// expNeg := test.expected - test.tolerance
+			// if diff < expNeg || diff > expPos {
+			// 	t.Fatalf("timer exceeded tolerance %s < %s < %s", expNeg, diff, expPos)
+			// }
+		})
+	}
+}
+
 func Benchmark_Set(b *testing.B) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	c := NewCache(ctx, time.Hour, false)
 
 	for n := 0; n < b.N; n++ {
-		c.Set(ctx, key, value)
+		err := c.Set(ctx, key, value)
+		if err != nil {
+			b.Fatal(err.Error())
+		}
 	}
 }
 
