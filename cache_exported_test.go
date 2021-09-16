@@ -435,7 +435,7 @@ func Test_Set_extension(t *testing.T) {
 		"500ms -> 3s": {
 			time.Millisecond * 500,
 			time.Second * 3,
-			time.Millisecond,
+			time.Millisecond * 50,
 		},
 		"1s -> 5s": {
 			time.Second,

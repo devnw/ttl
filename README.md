@@ -39,7 +39,7 @@ cache := ttl.NewCache(
 )
 ```
 
-The `NewCache` method returns the `ttl.Cache` interface which defines the expected API for storing and accessing data in the cache. 
+The `NewCache` method returns the `ttl.Cache` interface which defines the expected API for storing and accessing data in the cache.
 
 ### Add Data to Cache
 
