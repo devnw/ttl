@@ -9,7 +9,7 @@ import (
 
 type newvalue struct {
 	v       interface{}
-	timeout *time.Duration
+	timeout time.Duration
 }
 
 type rw struct {
@@ -64,7 +64,7 @@ func (c *cache) cleanup() {
 
 func (c *cache) set(
 	key, value interface{},
-	timeout *time.Duration,
+	timeout time.Duration,
 	extend bool,
 ) *rw {
 	ctx, cancel := context.WithCancel(c.ctx)
@@ -96,7 +96,7 @@ func (c *cache) rwloop(
 	key, value interface{},
 	outgoing chan<- interface{},
 	incoming <-chan newvalue,
-	timeout *time.Duration,
+	timeout time.Duration,
 	extend bool,
 ) {
 	defer func() {
@@ -113,23 +113,21 @@ func (c *cache) rwloop(
 		}
 	}()
 
+	defer close(outgoing)
+
 	// Create the internal timer if the timeout is non-nil
 	// and assign the internal `C` channel to the timer channel
 	// for use in the select. Otherwise leave the timer channel
 	// nil so that it never trips the select statement because
 	// this specific key/value should be persistent.
-	var t *time.Timer
-	var timer <-chan time.Time
-	if timeout != nil {
-		t = time.NewTimer(*timeout)
-		timer = t.C
-	}
+
+	t := time.NewTimer(timeout)
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case <-timer:
+		case <-t.C:
 			return
 		case v, ok := <-incoming:
 			if !ok {
@@ -137,8 +135,9 @@ func (c *cache) rwloop(
 			}
 
 			value = v.v
+			timeout = v.timeout
 
-			resetTimer(t, v.timeout)
+			resetTimer(t, timeout)
 		case outgoing <- value:
 			// Only extend the timer on read
 			// if it is configured to do so
@@ -156,13 +155,9 @@ func (c *cache) rwloop(
 // set of calls from the go doc for `time.Timer.Reset`
 // to ensure the the `C` channel is drained and doesn't
 // immediately read on reset
-func resetTimer(t *time.Timer, d *time.Duration) {
-	if d == nil {
-		return
-	}
-
+func resetTimer(t *time.Timer, d time.Duration) {
 	if !t.Stop() {
 		<-t.C
 	}
-	t.Reset(*d)
+	t.Reset(d)
 }

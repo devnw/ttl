@@ -162,7 +162,7 @@ func Test_cache_set(t *testing.T) {
 
 	timeout := time.Minute
 
-	rw := che.set("test", "test", &timeout, false)
+	rw := che.set("test", "test", timeout, false)
 
 	if rw.cancel == nil ||
 		rw.ctx == nil ||
@@ -187,7 +187,7 @@ func Test_cache_set(t *testing.T) {
 	select {
 	case <-ctx.Done():
 		t.Fatal("expected write")
-	case rw.write <- newvalue{"test2", &timeout}:
+	case rw.write <- newvalue{"test2", timeout}:
 	}
 
 	select {
@@ -221,7 +221,7 @@ func Test_cache_set_closedWrite(t *testing.T) {
 
 	timeout := time.Minute
 
-	rw := che.set("test", "test", &timeout, false)
+	rw := che.set("test", "test", timeout, false)
 
 	if rw.cancel == nil ||
 		rw.ctx == nil ||
@@ -294,7 +294,7 @@ func Test_cache_set_closedRead(t *testing.T) {
 		"test",
 		outgoing,
 		incoming,
-		&timeout,
+		timeout,
 		false,
 	)
 
