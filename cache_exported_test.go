@@ -96,7 +96,7 @@ func Test_Delete(t *testing.T) {
 	}
 
 	timeout := time.Minute
-	rw := che.set("test", "test", &timeout, false)
+	rw := che.set("test", "test", timeout, false)
 
 	if rw.cancel == nil ||
 		rw.ctx == nil ||
@@ -352,7 +352,7 @@ func Test_SetTTL(t *testing.T) {
 
 		timeout := time.Minute
 
-		c.SetTTL(ctx, key, value, &timeout)
+		c.SetTTL(ctx, key, value, timeout)
 
 		v, ok := c.Get(ctx, key)
 		if !ok {
@@ -370,13 +370,119 @@ func Test_SetTTL(t *testing.T) {
 	}
 }
 
+func Test_Set_expiration(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	c := NewCache(ctx, time.Hour, false)
+
+	testdata := map[string]struct {
+		expected  time.Duration
+		tolerance time.Duration
+	}{
+		"500µs": {
+			time.Microsecond * 500,
+			time.Microsecond * 500,
+		},
+		"1ms": {
+			time.Millisecond,
+			time.Microsecond * 500,
+		},
+		"10ms": {
+			time.Millisecond * 10,
+			time.Millisecond,
+		},
+		"50ms": {
+			time.Millisecond * 50,
+			time.Millisecond,
+		},
+		"500ms": {
+			time.Millisecond * 500,
+			time.Millisecond,
+		},
+		"1s": {
+			time.Second,
+			time.Millisecond * 50,
+		},
+	}
+
+	for name, test := range testdata {
+		t.Run(name, func(t *testing.T) {
+			err := c.SetTTL(ctx, key, name, test.expected)
+			if err != nil {
+				t.Fatal("expected successful set")
+			}
+
+			<-time.Tick(test.expected + test.tolerance)
+
+			_, ok := c.Get(ctx, key)
+			if ok {
+				t.Fatal("expected expiration")
+			}
+		})
+	}
+}
+
+func Test_Set_extension(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	c := NewCache(ctx, time.Hour, true)
+
+	testdata := map[string]struct {
+		expected  time.Duration
+		extension time.Duration
+		tolerance time.Duration
+	}{
+		"500ms -> 3s": {
+			time.Millisecond * 500,
+			time.Second * 3,
+			time.Millisecond,
+		},
+		"1s -> 5s": {
+			time.Second,
+			time.Second * 5,
+			time.Millisecond * 50,
+		},
+	}
+
+	for name, test := range testdata {
+		t.Run(name, func(t *testing.T) {
+			err := c.SetTTL(ctx, key, name, test.expected)
+			if err != nil {
+				t.Fatal("expected successful set")
+			}
+
+			err = c.SetTTL(ctx, key, name, test.extension)
+			if err != nil {
+				t.Fatal("expected successful set")
+			}
+
+			<-time.Tick(test.extension - (test.expected - test.tolerance))
+
+			_, ok := c.Get(ctx, key)
+			if !ok {
+				t.Fatal("expected extension")
+			}
+
+			<-time.Tick(test.extension + test.tolerance)
+
+			_, ok = c.Get(ctx, key)
+			if ok {
+				t.Fatal("expected expiration")
+			}
+		})
+	}
+}
+
 func Benchmark_Set(b *testing.B) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	c := NewCache(ctx, time.Hour, false)
 
 	for n := 0; n < b.N; n++ {
-		c.Set(ctx, key, value)
+		err := c.Set(ctx, key, value)
+		if err != nil {
+			b.Fatal(err.Error())
+		}
 	}
 }
 

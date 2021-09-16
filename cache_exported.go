@@ -13,7 +13,7 @@ type Cache interface {
 
 	// SetTTL allows for overriding the default timeout
 	// for the cache for this value
-	SetTTL(ctx context.Context, key, value interface{}, timeout *time.Duration) error
+	SetTTL(ctx context.Context, key, value interface{}, timeout time.Duration) error
 
 	Delete(ctx context.Context, key interface{})
 }
@@ -79,9 +79,6 @@ func (c *cache) Get(
 		return nil, ok
 	}
 
-	// TODO: This should have a timeout to ensure that
-	// if there is a block on the read that the cache doesn't
-	// create a deadlock
 	select {
 	case <-c.ctx.Done():
 		return nil, false
@@ -98,7 +95,7 @@ func (c *cache) Set(
 	ctx context.Context,
 	key, value interface{},
 ) error {
-	return c.SetTTL(ctx, key, value, &c.timeout)
+	return c.SetTTL(ctx, key, value, c.timeout)
 }
 
 // SetTTL allows for direct control over the TTL of a specific
@@ -108,7 +105,7 @@ func (c *cache) Set(
 func (c *cache) SetTTL(
 	ctx context.Context,
 	key, value interface{},
-	timeout *time.Duration,
+	timeout time.Duration,
 ) error {
 	if c.values == nil {
 		return fmt.Errorf("canceled cache instance")
