@@ -8,14 +8,14 @@ import (
 	"github.com/davecgh/go-spew/spew"
 )
 
-func cleanrw() *rw {
+func cleanrw[V any]() *rw[V] {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	return &rw{
+	return &rw[V]{
 		ctx,
 		cancel,
-		make(<-chan interface{}),
-		make(chan<- newvalue),
+		make(<-chan V),
+		make(chan<- newvalue[V]),
 	}
 }
 

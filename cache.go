@@ -7,27 +7,27 @@ import (
 	"time"
 )
 
-type newvalue struct {
-	v       interface{}
+type newvalue[V any] struct {
+	v       V
 	timeout time.Duration
 }
 
-type rw struct {
+type rw[V any] struct {
 	ctx    context.Context
 	cancel context.CancelFunc
-	read   <-chan interface{}
-	write  chan<- newvalue
+	read   <-chan V
+	write  chan<- newvalue[V]
 }
 
-type cache struct {
+type cache[K comparable, V any] struct {
 	ctx      context.Context
 	timeout  time.Duration
 	extend   bool
-	values   map[interface{}]*rw
+	values   map[K]*rw[V]
 	valuesMu sync.RWMutex
 }
 
-func (c *cache) write(key interface{}, value *rw) error {
+func (c *cache[K, V]) write(key K, value *rw[V]) error {
 	if c.values == nil || value == nil {
 		return fmt.Errorf("invalid cache instance")
 	}
@@ -40,7 +40,7 @@ func (c *cache) write(key interface{}, value *rw) error {
 	return nil
 }
 
-func (c *cache) cleanup() {
+func (c *cache[K, V]) cleanup() {
 	c.valuesMu.Lock()
 	defer c.valuesMu.Unlock()
 
@@ -62,16 +62,17 @@ func (c *cache) cleanup() {
 	c.values = nil
 }
 
-func (c *cache) set(
-	key, value interface{},
+func (c *cache[K, V]) set(
+	key K,
+	value V,
 	timeout time.Duration,
 	extend bool,
-) *rw {
+) *rw[V] {
 	ctx, cancel := context.WithCancel(c.ctx)
-	outgoing := make(chan interface{})
-	incoming := make(chan newvalue)
+	outgoing := make(chan V)
+	incoming := make(chan newvalue[V])
 
-	out := &rw{
+	out := &rw[V]{
 		ctx:    ctx,
 		cancel: cancel,
 		read:   outgoing,
@@ -91,11 +92,12 @@ func (c *cache) set(
 	return out
 }
 
-func (c *cache) rwloop(
+func (c *cache[K, V]) rwloop(
 	ctx context.Context,
-	key, value interface{},
-	outgoing chan<- interface{},
-	incoming <-chan newvalue,
+	key K,
+	value V,
+	outgoing chan<- V,
+	incoming <-chan newvalue[V],
 	timeout time.Duration,
 	extend bool,
 ) {

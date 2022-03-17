@@ -6,32 +6,32 @@ import (
 	"time"
 )
 
-type Cache interface {
-	Get(ctx context.Context, key interface{}) (interface{}, bool)
+type Cache[K comparable, V any] interface {
+	Get(ctx context.Context, key K) (V, bool)
 
-	Set(ctx context.Context, key, value interface{}) error
+	Set(ctx context.Context, key K, value V) error
 
 	// SetTTL allows for overriding the default timeout
 	// for the cache for this value
-	SetTTL(ctx context.Context, key, value interface{}, timeout time.Duration) error
+	SetTTL(ctx context.Context, key K, value V, timeout time.Duration) error
 
-	Delete(ctx context.Context, key interface{})
+	Delete(ctx context.Context, key K)
 }
 
 // NewCache creates a new TTL Cache using the a timeout
 // for the default timeout of stored values and the extend
 // value to determine if the cache lifetime of the set values
 // should be extended upon read
-func NewCache(ctx context.Context, timeout time.Duration, extend bool) Cache {
+func NewCache[K comparable, V any](ctx context.Context, timeout time.Duration, extend bool) Cache[K, V] {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
-	c := &cache{
+	c := &cache[K, V]{
 		ctx:     ctx,
 		timeout: timeout,
 		extend:  extend,
-		values:  make(map[interface{}]*rw),
+		values:  make(map[K]*rw[V]),
 	}
 
 	go func() {
@@ -44,10 +44,7 @@ func NewCache(ctx context.Context, timeout time.Duration, extend bool) Cache {
 
 // Delete removes the values associated with the
 // passed key from the cache
-func (c *cache) Delete(
-	ctx context.Context,
-	key interface{},
-) {
+func (c *cache[K, V]) Delete(ctx context.Context, key K) {
 	c.valuesMu.Lock()
 	defer c.valuesMu.Unlock()
 
@@ -62,12 +59,9 @@ func (c *cache) Delete(
 	delete(c.values, key)
 }
 
-func (c *cache) Get(
-	ctx context.Context,
-	key interface{},
-) (interface{}, bool) {
+func (c *cache[K, V]) Get(ctx context.Context, key K) (V, bool) {
 	if c.values == nil {
-		return nil, false
+		return *new(V), false
 	}
 
 	c.valuesMu.RLock()
@@ -76,25 +70,22 @@ func (c *cache) Get(
 
 	// No stored value for this key
 	if !ok {
-		return nil, ok
+		return *new(V), ok
 	}
 
 	select {
 	case <-c.ctx.Done():
-		return nil, false
+		return *new(V), false
 	case v, ok := <-rw.read:
 		if !ok {
-			return nil, ok
+			return *new(V), ok
 		}
 
 		return v, ok
 	}
 }
 
-func (c *cache) Set(
-	ctx context.Context,
-	key, value interface{},
-) error {
+func (c *cache[K, V]) Set(ctx context.Context, key K, value V) error {
 	return c.SetTTL(ctx, key, value, c.timeout)
 }
 
@@ -102,9 +93,9 @@ func (c *cache) Set(
 // Key in the cache which is passed as timeout in parameter three.
 // This timeout can be `nil` which will keep the value permanently
 // in the cache without expiration until it's deleted
-func (c *cache) SetTTL(
+func (c *cache[K, V]) SetTTL(
 	ctx context.Context,
-	key, value interface{},
+	key K, value V,
 	timeout time.Duration,
 ) error {
 	if c.values == nil {
@@ -128,7 +119,7 @@ func (c *cache) SetTTL(
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
-	case rw.write <- newvalue{
+	case rw.write <- newvalue[V]{
 		v:       value,
 		timeout: timeout,
 	}:
