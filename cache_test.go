@@ -8,14 +8,14 @@ import (
 	"github.com/davecgh/go-spew/spew"
 )
 
-func cleanrw() *rw {
+func cleanrw[V any]() *rw[V] {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	return &rw{
+	return &rw[V]{
 		ctx,
 		cancel,
-		make(<-chan interface{}),
-		make(chan<- newvalue),
+		make(<-chan V),
+		make(chan<- newvalue[V]),
 	}
 }
 
@@ -24,20 +24,20 @@ func Test_cache_write(t *testing.T) {
 	defer cancel()
 
 	testdata := map[string]struct {
-		key   interface{}
-		value *rw
+		key   string
+		value *rw[any]
 	}{
 		"valid": {
 			"test-key",
-			cleanrw(),
+			cleanrw[any](),
 		},
 	}
 
 	for name, test := range testdata {
 		t.Run(name, func(t *testing.T) {
-			c := NewCache(ctx, time.Hour, false)
+			c := NewCache[string, any](ctx, time.Hour, false)
 
-			che, ok := c.(*cache)
+			che, ok := c.(*cache[string, any])
 			if !ok {
 				t.Fatal("Invalid internal cache type")
 			}
@@ -67,11 +67,11 @@ func Test_cache_write_cleaned(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	c := NewCache(ctx, time.Hour, false)
+	c := NewCache[string, any](ctx, time.Hour, false)
 
-	rw := cleanrw()
+	rw := cleanrw[any]()
 
-	che, ok := c.(*cache)
+	che, ok := c.(*cache[string, any])
 	if !ok {
 		t.Fatal("Invalid internal cache type")
 	}
@@ -92,9 +92,9 @@ func Test_cache_write_invalid_value(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	c := NewCache(ctx, time.Hour, false)
+	c := NewCache[string, any](ctx, time.Hour, false)
 
-	che, ok := c.(*cache)
+	che, ok := c.(*cache[string, any])
 	if !ok {
 		t.Fatal("Invalid internal cache type")
 	}
@@ -113,11 +113,11 @@ func Test_cache_cleanup(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	c := NewCache(ctx, time.Hour, false)
+	c := NewCache[string, any](ctx, time.Hour, false)
 
-	rw := cleanrw()
+	rw := cleanrw[any]()
 
-	che, ok := c.(*cache)
+	che, ok := c.(*cache[string, any])
 	if !ok {
 		t.Fatal("Invalid internal cache type")
 	}
@@ -149,9 +149,9 @@ func Test_cache_set(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	c := NewCache(ctx, time.Hour, false)
+	c := NewCache[string, string](ctx, time.Hour, false)
 
-	che, ok := c.(*cache)
+	che, ok := c.(*cache[string, string])
 	if !ok {
 		t.Fatal("Invalid internal cache type")
 	}
@@ -187,7 +187,7 @@ func Test_cache_set(t *testing.T) {
 	select {
 	case <-ctx.Done():
 		t.Fatal("expected write")
-	case rw.write <- newvalue{"test2", timeout}:
+	case rw.write <- newvalue[string]{"test2", timeout}:
 	}
 
 	select {
@@ -208,9 +208,9 @@ func Test_cache_set_closedWrite(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	c := NewCache(ctx, time.Hour, false)
+	c := NewCache[string, string](ctx, time.Hour, false)
 
-	che, ok := c.(*cache)
+	che, ok := c.(*cache[string, string])
 	if !ok {
 		t.Fatal("Invalid internal cache type")
 	}
@@ -253,11 +253,11 @@ func Test_cache_set_closedRead(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	che := &cache{
+	che := &cache[string, string]{
 		ctx:     ctx,
 		timeout: time.Hour,
 		extend:  false,
-		values:  make(map[interface{}]*rw),
+		values:  make(map[string]*rw[string]),
 	}
 
 	if che == nil {
@@ -266,10 +266,10 @@ func Test_cache_set_closedRead(t *testing.T) {
 
 	timeout := time.Minute
 
-	outgoing := make(chan interface{})
-	incoming := make(chan newvalue)
+	outgoing := make(chan string)
+	incoming := make(chan newvalue[string])
 
-	out := &rw{
+	out := &rw[string]{
 		ctx:    ctx,
 		cancel: cancel,
 		read:   outgoing,
