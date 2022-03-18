@@ -40,9 +40,9 @@ func Test_NewCache(t *testing.T) {
 
 	for name, test := range testdata {
 		t.Run(name, func(t *testing.T) {
-			c := NewCache(test.Context, test.timeout, test.extend)
+			c := NewCache[int, any](test.Context, test.timeout, test.extend)
 
-			che, ok := c.(*cache)
+			che, ok := c.(*cache[int, any])
 			if !ok {
 				t.Fatal("Invalid internal cache type")
 			}
@@ -84,9 +84,9 @@ func Test_Delete(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	c := NewCache(ctx, time.Hour, false)
+	c := NewCache[string, string](ctx, time.Hour, false)
 
-	che, ok := c.(*cache)
+	che, ok := c.(*cache[string, string])
 	if !ok {
 		t.Fatal("Invalid internal cache type")
 	}
@@ -125,11 +125,11 @@ func Test_Delete(t *testing.T) {
 func Test_Get(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	c := NewCache(ctx, time.Hour, false)
+	c := NewCache[string, any](ctx, time.Hour, false)
 
 	testdata := map[string]struct {
-		key   interface{}
-		value interface{}
+		key   string
+		value any
 	}{
 		"nil": {
 			"test",
@@ -177,9 +177,9 @@ func Test_Get_nilmap(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	c := NewCache(ctx, time.Hour, false)
+	c := NewCache[string, any](ctx, time.Hour, false)
 
-	che, ok := c.(*cache)
+	che, ok := c.(*cache[string, any])
 	if !ok {
 		t.Fatal("Invalid internal cache type")
 	}
@@ -200,7 +200,7 @@ func Test_Get_novalue(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	c := NewCache(ctx, time.Hour, false)
+	c := NewCache[string, any](ctx, time.Hour, false)
 
 	v, ok := c.Get(ctx, "test")
 	if ok || v != nil {
@@ -211,9 +211,9 @@ func Test_Get_novalue(t *testing.T) {
 func Test_Get_closedctx(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	c := NewCache(ctx, time.Hour, false)
+	c := NewCache[string, any](ctx, time.Hour, false)
 
-	che, ok := c.(*cache)
+	che, ok := c.(*cache[string, any])
 	if !ok {
 		t.Fatal("Invalid internal cache type")
 	}
@@ -226,7 +226,7 @@ func Test_Get_closedctx(t *testing.T) {
 
 	// This will create a fake struct which has a channel
 	// that will always block on read
-	che.values["test"] = &rw{}
+	che.values["test"] = &rw[any]{}
 
 	v, ok := c.Get(ctx, "test")
 	if ok || v != nil {
@@ -237,7 +237,7 @@ func Test_Get_closedctx(t *testing.T) {
 func Test_Set(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	c := NewCache(ctx, time.Hour, false)
+	c := NewCache[string, string](ctx, time.Hour, false)
 
 	for i := 0; i < 1000; i++ {
 		value := randomdata.SillyName()
@@ -248,13 +248,8 @@ func Test_Set(t *testing.T) {
 			t.Fatal("expected key to exist")
 		}
 
-		out, ok := v.(string)
-		if !ok {
-			t.Fatalf("expected stored string, got %T", v)
-		}
-
-		if out != value {
-			t.Fatalf("expected value %s; got %s", value, out)
+		if v != value {
+			t.Fatalf("expected value %s; got %s", value, v)
 		}
 	}
 }
@@ -263,9 +258,9 @@ func Test_Set_nilmap(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	c := NewCache(ctx, time.Hour, false)
+	c := NewCache[string, any](ctx, time.Hour, false)
 
-	che, ok := c.(*cache)
+	che, ok := c.(*cache[string, any])
 	if !ok {
 		t.Fatal("Invalid internal cache type")
 	}
@@ -286,7 +281,7 @@ func Test_Set_existing_update(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	c := NewCache(ctx, time.Hour, false)
+	c := NewCache[string, string](ctx, time.Hour, false)
 
 	c.Set(ctx, key, value)
 
@@ -297,13 +292,8 @@ func Test_Set_existing_update(t *testing.T) {
 			t.Fatal("expected to find value")
 		}
 
-		out, ok := v.(string)
-		if !ok {
-			t.Fatalf("expected string; got %T", v)
-		}
-
-		if out != testvalue {
-			t.Fatalf("expected [%s]; got [%s]", testvalue, out)
+		if v != testvalue {
+			t.Fatalf("expected [%s]; got [%s]", testvalue, v)
 		}
 
 		testvalue = randomdata.SillyName()
@@ -320,9 +310,9 @@ func Test_Set_closedctx(t *testing.T) {
 
 	ctx2, cancel2 := context.WithCancel(context.Background())
 
-	c := NewCache(ctx, time.Hour, false)
+	c := NewCache[string, any](ctx, time.Hour, false)
 
-	che, ok := c.(*cache)
+	che, ok := c.(*cache[string, any])
 	if !ok {
 		t.Fatal("Invalid internal cache type")
 	}
@@ -333,7 +323,7 @@ func Test_Set_closedctx(t *testing.T) {
 
 	// This will create a fake struct which has a channel
 	// that will always block on read
-	che.values["test"] = &rw{}
+	che.values["test"] = &rw[any]{}
 
 	cancel2()
 	err := c.Set(ctx2, "test", "value")
@@ -345,7 +335,7 @@ func Test_Set_closedctx(t *testing.T) {
 func Test_SetTTL(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	c := NewCache(ctx, time.Hour, false)
+	c := NewCache[string, string](ctx, time.Hour, false)
 
 	for i := 0; i < 1000; i++ {
 		value := randomdata.SillyName()
@@ -359,13 +349,8 @@ func Test_SetTTL(t *testing.T) {
 			t.Fatal("expected key to exist")
 		}
 
-		out, ok := v.(string)
-		if !ok {
-			t.Fatalf("expected stored string, got %T", v)
-		}
-
-		if out != value {
-			t.Fatalf("expected value %s; got %s", value, out)
+		if v != value {
+			t.Fatalf("expected value %s; got %s", value, v)
 		}
 	}
 }
@@ -373,7 +358,7 @@ func Test_SetTTL(t *testing.T) {
 func Test_Set_expiration(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	c := NewCache(ctx, time.Hour, false)
+	c := NewCache[string, string](ctx, time.Hour, false)
 
 	testdata := map[string]struct {
 		expected  time.Duration
@@ -425,7 +410,7 @@ func Test_Set_expiration(t *testing.T) {
 func Test_Set_extension(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	c := NewCache(ctx, time.Hour, true)
+	c := NewCache[string, string](ctx, time.Hour, true)
 
 	testdata := map[string]struct {
 		expected  time.Duration
@@ -476,7 +461,7 @@ func Test_Set_extension(t *testing.T) {
 func Benchmark_Set(b *testing.B) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	c := NewCache(ctx, time.Hour, false)
+	c := NewCache[string, string](ctx, time.Hour, false)
 
 	for n := 0; n < b.N; n++ {
 		err := c.Set(ctx, key, value)
@@ -489,7 +474,7 @@ func Benchmark_Set(b *testing.B) {
 func Benchmark_Get(b *testing.B) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	c := NewCache(ctx, time.Hour, false)
+	c := NewCache[string, string](ctx, time.Hour, false)
 	c.Set(ctx, key, value)
 
 	for n := 0; n < b.N; n++ {
