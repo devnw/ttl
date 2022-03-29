@@ -328,10 +328,6 @@ func Test_Set_expiration(t *testing.T) {
 		expected  time.Duration
 		tolerance time.Duration
 	}{
-		"500µs": {
-			time.Microsecond * 500,
-			time.Microsecond * 500,
-		},
 		"1ms": {
 			time.Millisecond,
 			time.Microsecond * 500,
