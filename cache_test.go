@@ -37,21 +37,16 @@ func Test_cache_write(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			c := NewCache[string, any](ctx, time.Hour, false)
 
-			che, ok := c.(*cache[string, any])
-			if !ok {
-				t.Fatal("Invalid internal cache type")
-			}
-
-			if che == nil {
+			if c == nil {
 				t.Fatal("Expected valid struct, got NIL")
 			}
 
-			err := che.write(test.key, test.value)
+			err := c.write(test.key, test.value)
 			if err != nil {
 				t.Fatalf("expected success | %s", err.Error())
 			}
 
-			v, ok := che.values[test.key]
+			v, ok := c.values[test.key]
 			if !ok {
 				t.Fatal("Key not in map")
 			}
@@ -71,18 +66,13 @@ func Test_cache_write_cleaned(t *testing.T) {
 
 	rw := cleanrw[any]()
 
-	che, ok := c.(*cache[string, any])
-	if !ok {
-		t.Fatal("Invalid internal cache type")
-	}
-
-	if che == nil {
+	if c == nil {
 		t.Fatal("Expected valid struct, got NIL")
 	}
 
-	che.cleanup()
+	c.cleanup()
 
-	err := che.write("test", rw)
+	err := c.write("test", rw)
 	if err == nil {
 		t.Fatal("expected failure due to nil value map")
 	}
@@ -93,17 +83,11 @@ func Test_cache_write_invalid_value(t *testing.T) {
 	defer cancel()
 
 	c := NewCache[string, any](ctx, time.Hour, false)
-
-	che, ok := c.(*cache[string, any])
-	if !ok {
-		t.Fatal("Invalid internal cache type")
-	}
-
-	if che == nil {
+	if c == nil {
 		t.Fatal("Expected valid struct, got NIL")
 	}
 
-	err := che.write("test", nil)
+	err := c.write("test", nil)
 	if err == nil {
 		t.Fatal("expected failure due to nil value")
 	}
@@ -117,21 +101,16 @@ func Test_cache_cleanup(t *testing.T) {
 
 	rw := cleanrw[any]()
 
-	che, ok := c.(*cache[string, any])
-	if !ok {
-		t.Fatal("Invalid internal cache type")
-	}
-
-	if che == nil {
+	if c == nil {
 		t.Fatal("Expected valid struct, got NIL")
 	}
 
-	err := che.write("test", rw)
+	err := c.write("test", rw)
 	if err != nil {
 		t.Fatalf("expected success | %s", err.Error())
 	}
 
-	che.cleanup()
+	c.cleanup()
 
 	// Ensure the stored value's context is canceled
 	select {
@@ -140,7 +119,7 @@ func Test_cache_cleanup(t *testing.T) {
 	case <-rw.ctx.Done():
 	}
 
-	if che.values != nil {
+	if c.values != nil {
 		t.Fatalf("cache not properly cleaned up")
 	}
 }
@@ -150,19 +129,13 @@ func Test_cache_set(t *testing.T) {
 	defer cancel()
 
 	c := NewCache[string, string](ctx, time.Hour, false)
-
-	che, ok := c.(*cache[string, string])
-	if !ok {
-		t.Fatal("Invalid internal cache type")
-	}
-
-	if che == nil {
+	if c == nil {
 		t.Fatal("Expected valid struct, got NIL")
 	}
 
 	timeout := time.Minute
 
-	rw := che.set("test", "test", timeout, false)
+	rw := c.set("test", "test", timeout, false)
 
 	if rw.cancel == nil ||
 		rw.ctx == nil ||
@@ -209,19 +182,13 @@ func Test_cache_set_closedWrite(t *testing.T) {
 	defer cancel()
 
 	c := NewCache[string, string](ctx, time.Hour, false)
-
-	che, ok := c.(*cache[string, string])
-	if !ok {
-		t.Fatal("Invalid internal cache type")
-	}
-
-	if che == nil {
+	if c == nil {
 		t.Fatal("Expected valid struct, got NIL")
 	}
 
 	timeout := time.Minute
 
-	rw := che.set("test", "test", timeout, false)
+	rw := c.set("test", "test", timeout, false)
 
 	if rw.cancel == nil ||
 		rw.ctx == nil ||
@@ -230,12 +197,12 @@ func Test_cache_set_closedWrite(t *testing.T) {
 		t.Fatalf("invalid rw instantiation | %s", spew.Sdump(rw))
 	}
 
-	err := che.write("test", rw)
+	err := c.write("test", rw)
 	if err != nil {
 		t.Fatalf("error writing rw to cache | %s", err.Error())
 	}
 
-	if _, ok := che.values["test"]; !ok {
+	if _, ok := c.values["test"]; !ok {
 		t.Fatalf("value not in cache")
 	}
 
@@ -244,7 +211,7 @@ func Test_cache_set_closedWrite(t *testing.T) {
 
 	<-time.Tick(time.Second)
 
-	if _, ok := che.values["test"]; !ok {
+	if _, ok := c.values["test"]; !ok {
 		t.Fatalf("value not in cache")
 	}
 }
@@ -253,7 +220,7 @@ func Test_cache_set_closedRead(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	che := &cache[string, string]{
+	che := &Cache[string, string]{
 		ctx:     ctx,
 		timeout: time.Hour,
 		extend:  false,

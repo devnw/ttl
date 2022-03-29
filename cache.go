@@ -3,7 +3,6 @@ package ttl
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 )
 
@@ -19,15 +18,7 @@ type rw[V any] struct {
 	write  chan<- newvalue[V]
 }
 
-type cache[K comparable, V any] struct {
-	ctx      context.Context
-	timeout  time.Duration
-	extend   bool
-	values   map[K]*rw[V]
-	valuesMu sync.RWMutex
-}
-
-func (c *cache[K, V]) write(key K, value *rw[V]) error {
+func (c *Cache[K, V]) write(key K, value *rw[V]) error {
 	if c.values == nil || value == nil {
 		return fmt.Errorf("invalid cache instance")
 	}
@@ -40,7 +31,7 @@ func (c *cache[K, V]) write(key K, value *rw[V]) error {
 	return nil
 }
 
-func (c *cache[K, V]) cleanup() {
+func (c *Cache[K, V]) cleanup() {
 	c.valuesMu.Lock()
 	defer c.valuesMu.Unlock()
 
@@ -62,7 +53,7 @@ func (c *cache[K, V]) cleanup() {
 	c.values = nil
 }
 
-func (c *cache[K, V]) set(
+func (c *Cache[K, V]) set(
 	key K,
 	value V,
 	timeout time.Duration,
@@ -92,7 +83,7 @@ func (c *cache[K, V]) set(
 	return out
 }
 
-func (c *cache[K, V]) rwloop(
+func (c *Cache[K, V]) rwloop(
 	ctx context.Context,
 	key K,
 	value V,

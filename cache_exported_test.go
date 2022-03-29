@@ -41,39 +41,33 @@ func Test_NewCache(t *testing.T) {
 	for name, test := range testdata {
 		t.Run(name, func(t *testing.T) {
 			c := NewCache[int, any](test.Context, test.timeout, test.extend)
-
-			che, ok := c.(*cache[int, any])
-			if !ok {
-				t.Fatal("Invalid internal cache type")
-			}
-
-			if che == nil {
+			if c == nil {
 				t.Fatal("Expected valid struct, got NIL")
 			}
 
-			if test.Context != nil && che.ctx != test.Context {
+			if test.Context != nil && c.ctx != test.Context {
 				t.Fatal("Expected context to match")
-			} else if test.Context == nil && che.ctx == nil {
+			} else if test.Context == nil && c.ctx == nil {
 				t.Fatal("Expected non-nil context")
 			}
 
-			if che.timeout != test.timeout {
+			if c.timeout != test.timeout {
 				t.Fatalf(
 					"Expected timeout %s; got %s",
 					test.timeout,
-					che.timeout,
+					c.timeout,
 				)
 			}
 
-			if che.extend != test.extend {
+			if c.extend != test.extend {
 				t.Fatalf(
 					"Expected extend value %v; got %v",
 					test.extend,
-					che.extend,
+					c.extend,
 				)
 			}
 
-			if che.values == nil {
+			if c.values == nil {
 				t.Fatal("Expected non-nil values map")
 			}
 		})
@@ -85,18 +79,12 @@ func Test_Delete(t *testing.T) {
 	defer cancel()
 
 	c := NewCache[string, string](ctx, time.Hour, false)
-
-	che, ok := c.(*cache[string, string])
-	if !ok {
-		t.Fatal("Invalid internal cache type")
-	}
-
-	if che == nil {
+	if c == nil {
 		t.Fatal("Expected valid struct, got NIL")
 	}
 
 	timeout := time.Minute
-	rw := che.set("test", "test", timeout, false)
+	rw := c.set("test", "test", timeout, false)
 
 	if rw.cancel == nil ||
 		rw.ctx == nil ||
@@ -105,18 +93,18 @@ func Test_Delete(t *testing.T) {
 		t.Fatalf("invalid rw instantiation | %s", spew.Sdump(rw))
 	}
 
-	err := che.write("test", rw)
+	err := c.write("test", rw)
 	if err != nil {
 		t.Fatalf("error writing rw to cache | %s", err.Error())
 	}
 
-	if _, ok := che.values["test"]; !ok {
+	if _, ok := c.values["test"]; !ok {
 		t.Fatalf("value not in cache")
 	}
 
 	c.Delete(ctx, "test")
 
-	if _, ok := che.values["test"]; ok {
+	if _, ok := c.values["test"]; ok {
 		t.Fatalf("value still in cache")
 	}
 	<-rw.ctx.Done()
@@ -178,17 +166,11 @@ func Test_Get_nilmap(t *testing.T) {
 	defer cancel()
 
 	c := NewCache[string, any](ctx, time.Hour, false)
-
-	che, ok := c.(*cache[string, any])
-	if !ok {
-		t.Fatal("Invalid internal cache type")
-	}
-
-	if che == nil {
+	if c == nil {
 		t.Fatal("Expected valid struct, got NIL")
 	}
 
-	che.values = nil
+	c.values = nil
 
 	v, ok := c.Get(ctx, "test")
 	if ok || v != nil {
@@ -212,13 +194,7 @@ func Test_Get_closedctx(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	c := NewCache[string, any](ctx, time.Hour, false)
-
-	che, ok := c.(*cache[string, any])
-	if !ok {
-		t.Fatal("Invalid internal cache type")
-	}
-
-	if che == nil {
+	if c == nil {
 		t.Fatal("Expected valid struct, got NIL")
 	}
 
@@ -226,7 +202,7 @@ func Test_Get_closedctx(t *testing.T) {
 
 	// This will create a fake struct which has a channel
 	// that will always block on read
-	che.values["test"] = &rw[any]{}
+	c.values["test"] = &rw[any]{}
 
 	v, ok := c.Get(ctx, "test")
 	if ok || v != nil {
@@ -259,17 +235,11 @@ func Test_Set_nilmap(t *testing.T) {
 	defer cancel()
 
 	c := NewCache[string, any](ctx, time.Hour, false)
-
-	che, ok := c.(*cache[string, any])
-	if !ok {
-		t.Fatal("Invalid internal cache type")
-	}
-
-	if che == nil {
+	if c == nil {
 		t.Fatal("Expected valid struct, got NIL")
 	}
 
-	che.values = nil
+	c.values = nil
 
 	err := c.Set(ctx, "test", "value")
 	if err == nil {
@@ -311,19 +281,13 @@ func Test_Set_closedctx(t *testing.T) {
 	ctx2, cancel2 := context.WithCancel(context.Background())
 
 	c := NewCache[string, any](ctx, time.Hour, false)
-
-	che, ok := c.(*cache[string, any])
-	if !ok {
-		t.Fatal("Invalid internal cache type")
-	}
-
-	if che == nil {
+	if c == nil {
 		t.Fatal("Expected valid struct, got NIL")
 	}
 
 	// This will create a fake struct which has a channel
 	// that will always block on read
-	che.values["test"] = &rw[any]{}
+	c.values["test"] = &rw[any]{}
 
 	cancel2()
 	err := c.Set(ctx2, "test", "value")
