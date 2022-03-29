@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1648513360105,
+  "lastUpdate": 1648513686071,
   "repoUrl": "https://github.com/devnw/ttl",
   "entries": {
     "Benchmark Results": [
@@ -72,6 +72,42 @@ window.BENCHMARK_DATA = {
             "value": 584.7,
             "unit": "ns/op",
             "extra": "2040492 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "benji@devnw.com",
+            "name": "Benji Vesterby",
+            "username": "benjivesterby"
+          },
+          "committer": {
+            "email": "benji@devnw.com",
+            "name": "Benji Vesterby",
+            "username": "benjivesterby"
+          },
+          "distinct": true,
+          "id": "c5bf2a1b2d9aa159b107de6df60dc6d0d16c2110",
+          "message": "Removing microsecond test because it continues to fail",
+          "timestamp": "2022-03-28T20:27:08-04:00",
+          "tree_id": "934bf7506ed4fbcb3b2b88ba7a2c8a078c5b221d",
+          "url": "https://github.com/devnw/ttl/commit/c5bf2a1b2d9aa159b107de6df60dc6d0d16c2110"
+        },
+        "date": 1648513685636,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmark_Set",
+            "value": 662.7,
+            "unit": "ns/op",
+            "extra": "1746468 times\n2 procs"
+          },
+          {
+            "name": "Benchmark_Get",
+            "value": 592.8,
+            "unit": "ns/op",
+            "extra": "1986171 times\n2 procs"
           }
         ]
       }
