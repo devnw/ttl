@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1647646310750,
+  "lastUpdate": 1648513360105,
   "repoUrl": "https://github.com/devnw/ttl",
   "entries": {
     "Benchmark Results": [
@@ -36,6 +36,42 @@ window.BENCHMARK_DATA = {
             "value": 553.4,
             "unit": "ns/op",
             "extra": "2027007 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "benji@devnw.com",
+            "name": "Benji Vesterby",
+            "username": "benjivesterby"
+          },
+          "committer": {
+            "email": "benji@devnw.com",
+            "name": "Benji Vesterby",
+            "username": "benjivesterby"
+          },
+          "distinct": true,
+          "id": "8d146a1ac489c90805aff0b6d900222665643228",
+          "message": "Updating the documentation for TTL",
+          "timestamp": "2022-03-28T20:21:45-04:00",
+          "tree_id": "e771cdfec6b5bfd9b9e6ccd041a278f3bd9c5803",
+          "url": "https://github.com/devnw/ttl/commit/8d146a1ac489c90805aff0b6d900222665643228"
+        },
+        "date": 1648513359668,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmark_Set",
+            "value": 673.3,
+            "unit": "ns/op",
+            "extra": "1792951 times\n2 procs"
+          },
+          {
+            "name": "Benchmark_Get",
+            "value": 584.7,
+            "unit": "ns/op",
+            "extra": "2040492 times\n2 procs"
           }
         ]
       }
