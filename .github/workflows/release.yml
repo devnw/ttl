@@ -10,7 +10,6 @@ jobs:
     name: "Build & Unit Tests"
     strategy:
       matrix:
-        go-version: [1.18.x]
         platform: [ubuntu-latest, macos-latest, windows-latest]
       fail-fast: true
     runs-on: ${{ matrix.platform }}
@@ -20,8 +19,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v2
         with:
-          go-version: ${{ matrix.go-version }}
-          stable: false
+          go-version: 1.17.x
       - name: Build
         run: go build ./...
       - name: Test
@@ -38,5 +36,3 @@ jobs:
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
-          files: |
-            LICENSE
