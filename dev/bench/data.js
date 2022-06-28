@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1656423951452,
+  "lastUpdate": 1656423969232,
   "repoUrl": "https://github.com/devnw/ttl",
   "entries": {
     "Benchmark Results": [
@@ -144,6 +144,42 @@ window.BENCHMARK_DATA = {
             "value": 694.4,
             "unit": "ns/op",
             "extra": "1683961 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6098c0ea4017cdf8c23c8723e95072450d60709f",
+          "message": "Bump actions/setup-go from 2 to 3 (#36)\n\nBumps [actions/setup-go](https://github.com/actions/setup-go) from 2 to 3.\r\n- [Release notes](https://github.com/actions/setup-go/releases)\r\n- [Commits](https://github.com/actions/setup-go/compare/v2...v3)\r\n\r\n---\r\nupdated-dependencies:\r\n- dependency-name: actions/setup-go\r\n  dependency-type: direct:production\r\n  update-type: version-update:semver-major\r\n...\r\n\r\nSigned-off-by: dependabot[bot] <support@github.com>\r\n\r\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2022-06-28T09:45:09-04:00",
+          "tree_id": "845bc5fe37f10eab4811c7cb0be91c7387cd3b0e",
+          "url": "https://github.com/devnw/ttl/commit/6098c0ea4017cdf8c23c8723e95072450d60709f"
+        },
+        "date": 1656423968771,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmark_Set",
+            "value": 704.7,
+            "unit": "ns/op",
+            "extra": "1699876 times\n2 procs"
+          },
+          {
+            "name": "Benchmark_Get",
+            "value": 607.4,
+            "unit": "ns/op",
+            "extra": "1985859 times\n2 procs"
           }
         ]
       }
