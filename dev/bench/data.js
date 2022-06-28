@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1648513686071,
+  "lastUpdate": 1656423951452,
   "repoUrl": "https://github.com/devnw/ttl",
   "entries": {
     "Benchmark Results": [
@@ -108,6 +108,42 @@ window.BENCHMARK_DATA = {
             "value": 592.8,
             "unit": "ns/op",
             "extra": "1986171 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b420f2b2029c70fda8e234ae08301c4f0ff8a83a",
+          "message": "Bump pascalgn/automerge-action from 0.15.2 to 0.15.3 (#41)\n\nBumps [pascalgn/automerge-action](https://github.com/pascalgn/automerge-action) from 0.15.2 to 0.15.3.\r\n- [Release notes](https://github.com/pascalgn/automerge-action/releases)\r\n- [Commits](https://github.com/pascalgn/automerge-action/compare/v0.15.2...v0.15.3)\r\n\r\n---\r\nupdated-dependencies:\r\n- dependency-name: pascalgn/automerge-action\r\n  dependency-type: direct:production\r\n  update-type: version-update:semver-patch\r\n...\r\n\r\nSigned-off-by: dependabot[bot] <support@github.com>\r\n\r\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2022-06-28T09:44:57-04:00",
+          "tree_id": "901cf9c680682329f4ae529ef7570c1e84f5f488",
+          "url": "https://github.com/devnw/ttl/commit/b420f2b2029c70fda8e234ae08301c4f0ff8a83a"
+        },
+        "date": 1656423949874,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmark_Set",
+            "value": 804.8,
+            "unit": "ns/op",
+            "extra": "1489557 times\n2 procs"
+          },
+          {
+            "name": "Benchmark_Get",
+            "value": 694.4,
+            "unit": "ns/op",
+            "extra": "1683961 times\n2 procs"
           }
         ]
       }
