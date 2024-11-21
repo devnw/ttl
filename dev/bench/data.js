@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1732190686881,
+  "lastUpdate": 1732190690817,
   "repoUrl": "https://github.com/devnw/ttl",
   "entries": {
     "Benchmark Results": [
@@ -216,6 +216,42 @@ window.BENCHMARK_DATA = {
             "value": 429.6,
             "unit": "ns/op",
             "extra": "2799402 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "benji@codepros.org",
+            "name": "Benji Vesterby",
+            "username": "benjivesterby"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d4bd508c3501d66e3475e0a9496c7f8c8eabce7b",
+          "message": "Merge pull request #45 from devnw/dependabot/github_actions/actions/setup-go-4\n\nBump actions/setup-go from 3 to 4",
+          "timestamp": "2024-11-21T07:04:05-05:00",
+          "tree_id": "378243396112f19cc7cd08f284adbf3a22820dc9",
+          "url": "https://github.com/devnw/ttl/commit/d4bd508c3501d66e3475e0a9496c7f8c8eabce7b"
+        },
+        "date": 1732190690507,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmark_Set",
+            "value": 495.1,
+            "unit": "ns/op",
+            "extra": "2435472 times\n4 procs"
+          },
+          {
+            "name": "Benchmark_Get",
+            "value": 429.8,
+            "unit": "ns/op",
+            "extra": "2813034 times\n4 procs"
           }
         ]
       }
