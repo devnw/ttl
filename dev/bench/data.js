@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1732190690817,
+  "lastUpdate": 1732190694258,
   "repoUrl": "https://github.com/devnw/ttl",
   "entries": {
     "Benchmark Results": [
@@ -252,6 +252,42 @@ window.BENCHMARK_DATA = {
             "value": 429.8,
             "unit": "ns/op",
             "extra": "2813034 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "benji@codepros.org",
+            "name": "Benji Vesterby",
+            "username": "benjivesterby"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "49ee16bd64630295d7dbcc539941d7502e38dfb0",
+          "message": "Merge pull request #44 from devnw/dependabot/github_actions/pascalgn/automerge-action-0.15.6\n\nBump pascalgn/automerge-action from 0.15.3 to 0.15.6",
+          "timestamp": "2024-11-21T07:04:08-05:00",
+          "tree_id": "37b7527d03c44194f4dde533d908e4bbfea2f16d",
+          "url": "https://github.com/devnw/ttl/commit/49ee16bd64630295d7dbcc539941d7502e38dfb0"
+        },
+        "date": 1732190693817,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmark_Set",
+            "value": 494.8,
+            "unit": "ns/op",
+            "extra": "2417847 times\n4 procs"
+          },
+          {
+            "name": "Benchmark_Get",
+            "value": 430.1,
+            "unit": "ns/op",
+            "extra": "2784480 times\n4 procs"
           }
         ]
       }
