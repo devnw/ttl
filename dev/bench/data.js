@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1656423969232,
+  "lastUpdate": 1732190686881,
   "repoUrl": "https://github.com/devnw/ttl",
   "entries": {
     "Benchmark Results": [
@@ -180,6 +180,42 @@ window.BENCHMARK_DATA = {
             "value": 607.4,
             "unit": "ns/op",
             "extra": "1985859 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "benji@codepros.org",
+            "name": "Benji Vesterby",
+            "username": "benjivesterby"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "66b99e2bd7bd79cadbbcc22594ad5a16108162ca",
+          "message": "Merge pull request #48 from devnw/dependabot/github_actions/codecov/codecov-action-3.1.4\n\nBump codecov/codecov-action from 3.1.0 to 3.1.4",
+          "timestamp": "2024-11-21T07:04:01-05:00",
+          "tree_id": "651698c1ff4f89fd8c7a443f636e65c6086e174d",
+          "url": "https://github.com/devnw/ttl/commit/66b99e2bd7bd79cadbbcc22594ad5a16108162ca"
+        },
+        "date": 1732190686481,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmark_Set",
+            "value": 505.8,
+            "unit": "ns/op",
+            "extra": "2427318 times\n4 procs"
+          },
+          {
+            "name": "Benchmark_Get",
+            "value": 429.6,
+            "unit": "ns/op",
+            "extra": "2799402 times\n4 procs"
           }
         ]
       }
